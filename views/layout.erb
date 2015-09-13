@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kitten Finder</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 420px;
+        margin: 10px 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <%= yield %>
+    </div>
+    <script>
+  var map;
+  function initMap() {
+    var laircoords = new google.maps.LatLng(<%= @location.get_coordinates("gmap").last[:lat] %>, <%= @location.get_coordinates("gmap").last[:lng] %>)
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: laircoords,
+      zoom: 16
+    });
+
+    var flightPlanCoordinates = [
+      <% @location.get_coordinates("gmap").each do |coordinate| %>
+        {lat: <%= coordinate[:lat] %>, lng: <%= coordinate[:lng] %>}<% unless coordinate.equal? @location.get_coordinates("gmap").last %>,<% end %>
+      <% end %>
+    ];
+    var flightPath = new google.maps.Polyline({
+      path: flightPlanCoordinates,
+      geodesic: true,
+      strokeColor: '#FF0000',
+      strokeOpacity: 1.0,
+      strokeWeight: 2
+    });
+
+    flightPath.setMap(map);
+
+    var crimescenecoords = new google.maps.LatLng(<%= @location.get_coordinates("gmap").first[:lat] %>, <%= @location.get_coordinates("gmap").first[:lng] %>)
+    var crimescenewindow = new google.maps.InfoWindow({
+      content: '<img src=\'images/CrimeScene.jpg\' width=\'200px\' height=\'160px\' alt=\'Police Cat\'/><h3>Crime Scene</h3>'
+    });
+    var crimescene = new google.maps.Marker({
+      position: crimescenecoords,
+      title:"Crime Scene"
+    });
+    crimescene.addListener('click', function() {
+      lairwindow.close();
+      crimescenewindow.open(map, crimescene);
+    });
+
+    crimescene.setMap(map);
+
+    var lairwindow = new google.maps.InfoWindow({
+      content: '<img src=\'images/Lair.jpg\' width=\'200px\' height=\'200px\' alt=\'Villain Cat\' /><h3>Lair</h3>'
+    });
+    var lair = new google.maps.Marker({
+      position: laircoords,
+      title:"Lair"
+    });
+    lair.addListener('click', function() {
+      crimescenewindow.close();
+      lairwindow.open(map, lair);
+    });
+
+    lair.setMap(map);
+  }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB6_xjm_1noFEyXcN7in7IThtVjm7wX5VU&callback=initMap" async defer></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </body>
+</html>
